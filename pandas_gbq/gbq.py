@@ -192,13 +192,14 @@ class GbqConnector(object):
 
     def __init__(self, project_id, reauth=False, verbose=False,
                  private_key=None, auth_local_webserver=False,
-                 dialect='legacy'):
+                 dialect='legacy', client_secrets=None):
         self.project_id = project_id
         self.reauth = reauth
         self.verbose = verbose
         self.private_key = private_key
         self.auth_local_webserver = auth_local_webserver
         self.dialect = dialect
+        self.client_secrets = client_secrets
         self.credentials = self.get_credentials()
         self.service = self.get_service()
 
@@ -344,8 +345,12 @@ class GbqConnector(object):
         }
 
         if credentials is None or self.reauth:
-            app_flow = InstalledAppFlow.from_client_config(
-                client_config, scopes=[self.scope])
+            if not self.client_secrets:
+                app_flow = InstalledAppFlow.from_client_config(
+                    client_config, scopes=[self.scope])
+            else:
+                app_flow = InstalledAppFlow.from_client_secrets_file(
+                    self.client_secrets, scopes=[self.scope])
 
             try:
                 if self.auth_local_webserver:
@@ -816,7 +821,8 @@ def _parse_entry(field_value, field_type):
 
 def read_gbq(query, project_id=None, index_col=None, col_order=None,
              reauth=False, verbose=True, private_key=None,
-             auth_local_webserver=False, dialect='legacy', **kwargs):
+             auth_local_webserver=False, dialect='legacy',
+             client_secrets=None, **kwargs):
     r"""Load data from Google BigQuery.
 
     The main method a user calls to execute a Query in Google BigQuery
@@ -903,7 +909,8 @@ def read_gbq(query, project_id=None, index_col=None, col_order=None,
 
     connector = GbqConnector(
         project_id, reauth=reauth, verbose=verbose, private_key=private_key,
-        dialect=dialect, auth_local_webserver=auth_local_webserver)
+        dialect=dialect, auth_local_webserver=auth_local_webserver,
+        client_secrets=client_secrets)
     schema, pages = connector.run_query(query, **kwargs)
     dataframe_list = []
     while len(pages) > 0:
