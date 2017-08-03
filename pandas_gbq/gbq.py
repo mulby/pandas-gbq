@@ -5,6 +5,7 @@ from time import sleep
 import uuid
 import time
 import sys
+import os
 
 import numpy as np
 
@@ -200,6 +201,7 @@ class GbqConnector(object):
         self.auth_local_webserver = auth_local_webserver
         self.dialect = dialect
         self.client_secrets = client_secrets
+        self.credential_file_path = os.getenv('GOOGLE_CREDENTIALS_CACHE', 'bigquery_credentials.dat')
         self.credentials = self.get_credentials()
         self.service = self.get_service()
 
@@ -272,7 +274,7 @@ class GbqConnector(object):
         from google.oauth2.credentials import Credentials
 
         try:
-            with open('bigquery_credentials.dat') as credentials_file:
+            with open(self.credential_file_path) as credentials_file:
                 credentials_json = json.load(credentials_file)
         except (IOError, ValueError):
             return None
@@ -300,7 +302,7 @@ class GbqConnector(object):
         .. versionadded 0.2.0
         """
         try:
-            with open('bigquery_credentials.dat', 'w') as credentials_file:
+            with open(self.credential_file_path, 'w') as credentials_file:
                 credentials_json = {
                     'refresh_token': credentials.refresh_token,
                     'id_token': credentials.id_token,
