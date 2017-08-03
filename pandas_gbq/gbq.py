@@ -302,7 +302,7 @@ class GbqConnector(object):
         .. versionadded 0.2.0
         """
         try:
-            with open(self.credential_file_path, 'w') as credentials_file:
+            with os.fdopen(os.open(self.credential_file_path, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as credentials_file:
                 credentials_json = {
                     'refresh_token': credentials.refresh_token,
                     'id_token': credentials.id_token,
